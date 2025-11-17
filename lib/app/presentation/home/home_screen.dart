@@ -7,6 +7,7 @@ import 'package:hc_presensi/app/presentation/home/home_notifier.dart';
 import 'package:hc_presensi/app/presentation/login/login_screen.dart';
 import 'package:hc_presensi/app/presentation/map/map_screen.dart';
 import 'package:hc_presensi/core/helper/date_time_helper.dart';
+import 'package:hc_presensi/core/helper/dialog_helper.dart';
 import 'package:hc_presensi/core/helper/global_helper.dart';
 import 'package:hc_presensi/core/helper/shared_preferences_helper.dart';
 import 'package:hc_presensi/core/widget/app_widget.dart';
@@ -93,6 +94,9 @@ class HomeScreen extends AppWidget<HomeNotifier, void, void> {
           SizedBox(
             width: 10,
           ),
+          IconButton(
+              onPressed: () => _onPressEditNotification(context),
+              icon: Icon(Icons.edit_notifications)),
           IconButton(
               onPressed: () => _onPressLogout(context),
               icon: Icon(Icons.logout))
@@ -346,6 +350,16 @@ class HomeScreen extends AppWidget<HomeNotifier, void, void> {
     notifier.init();
   }
 
+  _onPressEditNotification(BuildContext context) async {
+    DialogHelper.showBottomDialog(
+        context: context,
+        title: "Edit waktu notifikasi",
+        content: DropdownMenu<int>(
+            initialSelection: notifier.timeNotification,
+            onSelected: (value) => _onSaveEditNotification(context, value!),
+            dropdownMenuEntries: notifier.listEditNotification));
+  }
+
   _onPressLogout(BuildContext context) async {
     await SharedPreferencesHelper.logout();
     Navigator.pushAndRemoveUntil(
@@ -363,5 +377,10 @@ class HomeScreen extends AppWidget<HomeNotifier, void, void> {
         MaterialPageRoute(
           builder: (context) => DetailAttendanceScreen(),
         ));
+  }
+
+  _onSaveEditNotification(BuildContext context, int param) {
+    Navigator.pop(context);
+    notifier.saveNotificationSetting(param);
   }
 }

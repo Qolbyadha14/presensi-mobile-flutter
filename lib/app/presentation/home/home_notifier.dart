@@ -8,8 +8,11 @@ import 'package:hc_presensi/app/module/use_case/attendance_get_today.dart';
 import 'package:hc_presensi/app/module/use_case/schedule_banned.dart';
 import 'package:hc_presensi/app/module/use_case/schedule_get.dart';
 import 'package:hc_presensi/core/constant/constant.dart';
+import 'package:hc_presensi/core/helper/date_time_helper.dart';
+import 'package:hc_presensi/core/helper/notification_helper.dart';
 import 'package:hc_presensi/core/helper/shared_preferences_helper.dart';
 import 'package:hc_presensi/core/provider/app_provider.dart';
+import 'package:flutter/material.dart';
 
 class HomeNotifier extends AppProvider {
   final AttendanceGetTodayUseCase _attendanceGetTodayUseCase;
@@ -21,7 +24,13 @@ class HomeNotifier extends AppProvider {
       this._scheduleGetUseCase, this._scheduleBannedUseCase) {
     init();
   }
-
+  bool _isGrantedNotificationPresmission = false;
+  int _timeNotification = 5;
+  List<DropdownMenuEntry<int>> _listEditNotification = [
+    DropdownMenuEntry<int>(value: 5, label: '5 menit'),
+    DropdownMenuEntry<int>(value: 15, label: '15 menit'),
+    DropdownMenuEntry<int>(value: 30, label: '30 menit')
+  ];
   String _name = '';
   bool _isPhysicDevice = true;
   AttendanceEntity? _attendanceToday;
@@ -29,6 +38,10 @@ class HomeNotifier extends AppProvider {
   ScheduleEntity? _schedule;
   bool _isLeaves = false;
 
+  int get timeNotification => _timeNotification;
+  bool get isGrantedNotificationPermission => _isGrantedNotificationPresmission;
+  List<DropdownMenuEntry<int>> get listEditNotification =>
+      _listEditNotification;
   String get name => _name;
   bool get isPhysicDevice => _isPhysicDevice;
   AttendanceEntity? get attendanceToday => _attendanceToday;
@@ -41,6 +54,7 @@ class HomeNotifier extends AppProvider {
   void init() async {
     await _getUserDetail();
     // await _getDeviceInfo();
+    await _getNotificationPermission();
     if (errorMessage.isEmpty) await _getAttendanceToday();
     if (errorMessage.isEmpty) await _getAttendanceThisMonth();
     if (errorMessage.isEmpty) await _getSchedule();
@@ -49,6 +63,13 @@ class HomeNotifier extends AppProvider {
   _getUserDetail() async {
     showLoading();
     _name = await SharedPreferencesHelper.getString(PREF_NAME);
+    final pref_notif = await SharedPreferencesHelper.getInt(PREF_NOTIF_SETTING);
+    if (pref_notif != null) {
+      _timeNotification = pref_notif;
+    } else {
+      await SharedPreferencesHelper.setInt(
+          PREF_NOTIF_SETTING, _timeNotification);
+    }
     hideLoading();
   }
 
@@ -64,6 +85,16 @@ class HomeNotifier extends AppProvider {
 
     if (!_isPhysicDevice) _sendBanned();
     hideLoading();
+  }
+
+  _getNotificationPermission() async {
+    _isGrantedNotificationPresmission =
+        await NotificationHelper.isPermissionGranted();
+    if (!_isGrantedNotificationPresmission) {
+      await NotificationHelper.requestPermission();
+      await Future.delayed(Duration(seconds: 5));
+      _getNotificationPermission();
+    }
   }
 
   _getAttendanceToday() async {
@@ -96,6 +127,7 @@ class HomeNotifier extends AppProvider {
     if (response.success) {
       if (response.data != null) {
         _schedule = response.data!;
+        _setNotification();
       } else {
         _isLeaves = true;
         snackbarMessage = response.message;
@@ -114,6 +146,58 @@ class HomeNotifier extends AppProvider {
     } else {
       errorMeesage = response.message;
     }
+    hideLoading();
+  }
+
+  _setNotification() async {
+    showLoading();
+
+    await NotificationHelper.cancelAll();
+
+    final startShift =
+        await SharedPreferencesHelper.getString(PREF_START_SHIFT);
+    final endShift = await SharedPreferencesHelper.getString(PREF_END_SHIFT);
+    final prefTimeNotif =
+        await SharedPreferencesHelper.getInt(PREF_NOTIF_SETTING);
+
+    if (prefTimeNotif == null) {
+      SharedPreferencesHelper.setInt(PREF_NOTIF_SETTING, _timeNotification);
+    } else {
+      _timeNotification = prefTimeNotif;
+    }
+
+    DateTime startShiftDateTime = DateTimeHelper.parseDateTime(
+        dateTimeString: startShift, format: 'HH:mm:ss');
+
+    DateTime endShiftDateTime = DateTimeHelper.parseDateTime(
+        dateTimeString: endShift, format: 'HH:mm:ss');
+
+    startShiftDateTime =
+        startShiftDateTime.subtract(Duration(minutes: _timeNotification));
+    endShiftDateTime =
+        endShiftDateTime.subtract(Duration(minutes: _timeNotification));
+
+    await NotificationHelper.scheduleNotification(
+        id: 'start'.hashCode,
+        title: 'Pengingat!',
+        body: 'Jangan lupa untuk buat kehadiran datang',
+        hour: startShiftDateTime.hour,
+        minutes: startShiftDateTime.minute);
+
+    await NotificationHelper.scheduleNotification(
+        id: 'end'.hashCode,
+        title: 'Pengingat!',
+        body: 'Jangan lupa untuk buat kehadiran pulang',
+        hour: endShiftDateTime.hour,
+        minutes: endShiftDateTime.minute);
+    hideLoading();
+  }
+
+  saveNotificationSetting(int param) async {
+    showLoading();
+    await SharedPreferencesHelper.setInt(PREF_NOTIF_SETTING, param);
+    _timeNotification = param;
+    _setNotification();
     hideLoading();
   }
 }

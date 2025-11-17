@@ -15,4 +15,9 @@ class DateTimeHelper {
   static Duration getDifference({required DateTime a, required DateTime b}) {
     return b.difference(a);
   }
+
+  static DateTime parseDateTime(
+      {required String dateTimeString, String format = 'd MMM yyyy'}) {
+    return DateFormat(format).parse(dateTimeString);
+  }
 }

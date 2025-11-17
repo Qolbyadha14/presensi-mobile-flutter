@@ -1,6 +1,8 @@
 import 'package:hc_presensi/app/data/source/schedule_api_service.dart';
 import 'package:hc_presensi/app/module/entity/schedule.dart';
 import 'package:hc_presensi/app/module/repository/schedule_repository.dart';
+import 'package:hc_presensi/core/constant/constant.dart';
+import 'package:hc_presensi/core/helper/shared_preferences_helper.dart';
 import 'package:hc_presensi/core/network/data_state.dart';
 
 class ScheduleRepositoryImpl extends ScheduleRepository {
@@ -13,9 +15,13 @@ class ScheduleRepositoryImpl extends ScheduleRepository {
     return handleResponse(
       () => _scheduleApiService.get(),
       (json) {
-        if (json != null)
-          return ScheduleEntity.fromJson(json);
-        else
+        if (json != null) {
+          final data = ScheduleEntity.fromJson(json);
+          SharedPreferencesHelper.setString(
+              PREF_START_SHIFT, data.shift.startTime);
+          SharedPreferencesHelper.setString(PREF_END_SHIFT, data.shift.endTime);
+          return data;
+        } else
           return null;
       },
     );

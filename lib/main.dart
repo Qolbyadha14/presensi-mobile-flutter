@@ -4,10 +4,13 @@ import 'package:hc_presensi/core/widget/error_app_widget.dart';
 import 'package:hc_presensi/core/widget/loading_app_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:hc_presensi/core/helper/notification_helper.dart';
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('id', null);
   await initDependency();
+  await NotificationHelper.initNotification();
   runApp(const MyApp());
 }
 
