@@ -1,4 +1,6 @@
+import 'package:hc_presensi/app/presentation/login/login_screen.dart';
 import 'package:hc_presensi/core/helper/global_helper.dart';
+import 'package:hc_presensi/core/helper/shared_preferences_helper.dart';
 import 'package:flutter/material.dart';
 
 class ErrorAppWidget extends StatelessWidget {
@@ -34,10 +36,24 @@ class ErrorAppWidget extends StatelessWidget {
             height: 30,
           ),
           alternatifButton ??
-              FilledButton.icon(
-                  onPressed: onPressDefaultButton,
-                  icon: Icon(Icons.refresh),
-                  label: Text("Refresh"))
+              ((description.contains('401') ||
+                      description.toLowerCase().contains('unauthenticated'))
+                  ? FilledButton(
+                      onPressed: () async {
+                        await SharedPreferencesHelper.logout();
+                        Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => LoginScreen(),
+                          ),
+                          (route) => false,
+                        );
+                      },
+                      child: Text('Logout'))
+                  : FilledButton.icon(
+                      onPressed: onPressDefaultButton,
+                      icon: Icon(Icons.refresh),
+                      label: Text("Refresh")))
         ],
       ),
     );
