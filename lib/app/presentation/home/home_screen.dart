@@ -4,6 +4,7 @@ import 'package:hc_presensi/app/module/entity/attendance.dart';
 import 'package:hc_presensi/app/presentation/detail_attendance/detail_attendance_screen.dart';
 import 'package:hc_presensi/app/presentation/face_recognition/face_recognition_screen.dart';
 import 'package:hc_presensi/app/presentation/home/home_notifier.dart';
+import 'package:hc_presensi/app/presentation/leave/leave_screen.dart';
 import 'package:hc_presensi/app/presentation/login/login_screen.dart';
 import 'package:hc_presensi/app/presentation/map/map_screen.dart';
 import 'package:hc_presensi/core/helper/date_time_helper.dart';
@@ -98,11 +99,7 @@ class HomeScreen extends AppWidget<HomeNotifier, void, void> {
             width: 10,
           ),
           IconButton(
-              onPressed: () => _onPressEditNotification(context),
-              icon: Icon(Icons.edit_notifications)),
-          IconButton(
-              onPressed: () => _onPressLogout(context),
-              icon: Icon(Icons.logout))
+              onPressed: () => _onPressMenu(context), icon: Icon(Icons.menu))
         ],
       ),
     );
@@ -363,6 +360,37 @@ class HomeScreen extends AppWidget<HomeNotifier, void, void> {
             dropdownMenuEntries: notifier.listEditNotification));
   }
 
+  _onPressMenu(BuildContext context) {
+    DialogHelper.showBottomDialog(
+        context: context,
+        title: 'Menu',
+        content: Column(
+          children: [
+            Container(
+              width: double.maxFinite,
+              child: FilledButton.icon(
+                  onPressed: () => _onPressLeave(context),
+                  label: Text('Pengajuan cuti'),
+                  icon: Icon(Icons.leave_bags_at_home)),
+            ),
+            Container(
+              width: double.maxFinite,
+              child: FilledButton.icon(
+                  onPressed: () => _onPressEditNotification(context),
+                  label: Text('Pengaturan notifikasi'),
+                  icon: Icon(Icons.edit_notifications)),
+            ),
+            Container(
+              width: double.maxFinite,
+              child: OutlinedButton.icon(
+                  onPressed: () => _onPressLogout(context),
+                  label: Text('Logout'),
+                  icon: Icon(Icons.logout)),
+            )
+          ],
+        ));
+  }
+
   _onPressLogout(BuildContext context) async {
     await SharedPreferencesHelper.logout();
     Navigator.pushAndRemoveUntil(
@@ -385,5 +413,13 @@ class HomeScreen extends AppWidget<HomeNotifier, void, void> {
   _onSaveEditNotification(BuildContext context, int param) {
     Navigator.pop(context);
     notifier.saveNotificationSetting(param);
+  }
+
+  _onPressLeave(BuildContext context) {
+    Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => LeaveScreen(),
+        ));
   }
 }
