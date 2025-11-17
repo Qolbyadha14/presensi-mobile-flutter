@@ -16,20 +16,6 @@ import 'package:retrofit/http.dart';
 
 class HomeScreen extends AppWidget<HomeNotifier, void, void> {
   @override
-  void checkVariableBeforeUi(BuildContext context) {
-    if (!notifier.isPhysicDevice) {
-      alternatifErrorButton = FilledButton(
-        onPressed: () {
-          exit(0);
-        },
-        child: Text('Tutup'),
-      );
-    } else {
-      alternatifErrorButton = null;
-    }
-  }
-
-  @override
   Widget bodyBuild(BuildContext context) {
     return SafeArea(
       child: SingleChildScrollView(
@@ -83,7 +69,7 @@ class HomeScreen extends AppWidget<HomeNotifier, void, void> {
                         SizedBox(
                           width: 5,
                         ),
-                        Text(notifier.schedule.office.name),
+                        Text(notifier.schedule?.office.name ?? ''),
                       ],
                     )),
                     Expanded(
@@ -93,7 +79,7 @@ class HomeScreen extends AppWidget<HomeNotifier, void, void> {
                         SizedBox(
                           width: 5,
                         ),
-                        Text(notifier.schedule.shift.name)
+                        Text(notifier.schedule?.shift.name ?? '')
                       ],
                     ))
                   ],
@@ -145,7 +131,8 @@ class HomeScreen extends AppWidget<HomeNotifier, void, void> {
                   decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(10),
                       color: GlobalHelper.getColorSchema(context).onPrimary),
-                  child: Text((notifier.schedule.isWfa) ? 'WFA' : 'WFO'))
+                  child:
+                      Text((notifier.schedule?.isWfa ?? false) ? 'WFA' : 'WFO'))
             ],
           ),
           SizedBox(

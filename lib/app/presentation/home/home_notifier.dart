@@ -5,6 +5,7 @@ import 'package:hc_presensi/app/module/entity/attendance.dart';
 import 'package:hc_presensi/app/module/entity/schedule.dart';
 import 'package:hc_presensi/app/module/use_case/attendance_get_this_month.dart';
 import 'package:hc_presensi/app/module/use_case/attendance_get_today.dart';
+import 'package:hc_presensi/app/module/use_case/schedule_banned.dart';
 import 'package:hc_presensi/app/module/use_case/schedule_get.dart';
 import 'package:hc_presensi/core/constant/constant.dart';
 import 'package:hc_presensi/core/helper/shared_preferences_helper.dart';
@@ -14,9 +15,10 @@ class HomeNotifier extends AppProvider {
   final AttendanceGetTodayUseCase _attendanceGetTodayUseCase;
   final AttendanceGetMonthUseCase _attendanceGetMonthUseCase;
   final ScheduleGetUseCase _scheduleGetUseCase;
+  final ScheduleBannedUseCase _scheduleBannedUseCase;
 
   HomeNotifier(this._attendanceGetTodayUseCase, this._attendanceGetMonthUseCase,
-      this._scheduleGetUseCase) {
+      this._scheduleGetUseCase, this._scheduleBannedUseCase) {
     init();
   }
 
@@ -24,14 +26,14 @@ class HomeNotifier extends AppProvider {
   bool _isPhysicDevice = true;
   AttendanceEntity? _attendanceToday;
   List<AttendanceEntity> _listAttendanceThisMonth = [];
-  late ScheduleEntity _schedule;
+  ScheduleEntity? _schedule;
 
   String get name => _name;
   bool get isPhysicDevice => _isPhysicDevice;
   AttendanceEntity? get attendanceToday => _attendanceToday;
   List<AttendanceEntity> get listAttendanceThisMonth =>
       _listAttendanceThisMonth;
-  ScheduleEntity get schedule => _schedule;
+  ScheduleEntity? get schedule => _schedule;
 
   @override
   void init() async {
@@ -58,9 +60,7 @@ class HomeNotifier extends AppProvider {
       _isPhysicDevice = iOSInfo.isPhysicalDevice;
     }
 
-    if (!_isPhysicDevice)
-      errorMeesage =
-          'Anda terdeteksi melakukan kecurangan. Aplikasi hanya bisa berjalan menggunakan perangkat Android dan iOS (tidak termasuk emulator)';
+    if (!_isPhysicDevice) _sendBanned();
     hideLoading();
   }
 
@@ -92,6 +92,17 @@ class HomeNotifier extends AppProvider {
     final response = await _scheduleGetUseCase();
     if (response.success) {
       _schedule = response.data!;
+    } else {
+      errorMeesage = response.message;
+    }
+    hideLoading();
+  }
+
+  _sendBanned() async {
+    showLoading();
+    final response = await _scheduleBannedUseCase();
+    if (response.success) {
+      _getSchedule();
     } else {
       errorMeesage = response.message;
     }

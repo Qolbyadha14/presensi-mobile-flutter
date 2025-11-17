@@ -24,12 +24,6 @@ class MapScreen extends AppWidget<MapNotifier, void, void> {
             notifier.checkLocationService();
           },
           child: Text('Buka Pengaturan Lokasi'));
-    } else if (notifier.isMockedLocation) {
-      alternatifErrorButton = FilledButton(
-          onPressed: () {
-            Navigator.pop(context);
-          },
-          child: Text('Tutup'));
     } else {
       alternatifErrorButton = null;
     }
@@ -99,7 +93,7 @@ class MapScreen extends AppWidget<MapNotifier, void, void> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            notifier.schedule.office.name,
+                            notifier.schedule?.office.name ?? '',
                             style: GlobalHelper.getTextStyle(context,
                                 appTextStyle: AppTextStyle.TITLE_MEDIUM),
                           ),
@@ -111,7 +105,9 @@ class MapScreen extends AppWidget<MapNotifier, void, void> {
                                 color: GlobalHelper.getColorSchema(context)
                                     .primary),
                             child: Text(
-                                (notifier.schedule.isWfa) ? 'WFA' : 'WFO',
+                                (notifier.schedule?.isWfa ?? false)
+                                    ? 'WFA'
+                                    : 'WFO',
                                 style: GlobalHelper.getTextStyle(context,
                                         appTextStyle: AppTextStyle.BODY_SMALL)
                                     ?.copyWith(
@@ -140,12 +136,12 @@ class MapScreen extends AppWidget<MapNotifier, void, void> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            notifier.schedule.shift.name,
+                            notifier.schedule?.shift.name ?? '',
                             style: GlobalHelper.getTextStyle(context,
                                 appTextStyle: AppTextStyle.TITLE_MEDIUM),
                           ),
                           Text(
-                              '${notifier.schedule.shift.startTime} - ${notifier.schedule.shift.endTime}',
+                              '${notifier.schedule?.shift.startTime ?? ''} - ${notifier.schedule?.shift.endTime ?? ''}',
                               style: GlobalHelper.getTextStyle(context,
                                   appTextStyle: AppTextStyle.BODY_SMALL))
                         ],

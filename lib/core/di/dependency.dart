@@ -12,6 +12,7 @@ import 'package:hc_presensi/app/module/use_case/attendance_get_this_month.dart';
 import 'package:hc_presensi/app/module/use_case/attendance_get_today.dart';
 import 'package:hc_presensi/app/module/use_case/attendance_send.dart';
 import 'package:hc_presensi/app/module/use_case/auth_login.dart';
+import 'package:hc_presensi/app/module/use_case/schedule_banned.dart';
 import 'package:hc_presensi/app/module/use_case/schedule_get.dart';
 import 'package:hc_presensi/app/presentation/detail_attendance/detail_attendance_notifier.dart';
 import 'package:hc_presensi/app/presentation/home/home_notifier.dart';
@@ -56,16 +57,17 @@ Future<void> initDependency() async {
   sl.registerSingleton<AttendanceGetByMonthYear>(
       AttendanceGetByMonthYear(sl()));
   sl.registerSingleton<ScheduleGetUseCase>(ScheduleGetUseCase(sl()));
+  sl.registerSingleton<ScheduleBannedUseCase>(ScheduleBannedUseCase(sl()));
 
   //provider
   sl.registerFactoryParam<LoginNotifier, void, void>(
     (param1, param2) => LoginNotifier(sl()),
   );
   sl.registerFactoryParam<HomeNotifier, void, void>(
-    (param1, param2) => HomeNotifier(sl(), sl(), sl()),
+    (param1, param2) => HomeNotifier(sl(), sl(), sl(), sl()),
   );
   sl.registerFactoryParam<MapNotifier, void, void>(
-    (param1, param2) => MapNotifier(sl(), sl()),
+    (param1, param2) => MapNotifier(sl(), sl(), sl()),
   );
   sl.registerFactoryParam<DetailAttendanceNotifier, void, void>(
       (param1, param2) => DetailAttendanceNotifier(sl()));

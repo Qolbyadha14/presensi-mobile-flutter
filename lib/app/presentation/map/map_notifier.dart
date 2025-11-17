@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:hc_presensi/app/module/entity/attendance.dart';
 import 'package:hc_presensi/app/module/entity/schedule.dart';
 import 'package:hc_presensi/app/module/use_case/attendance_send.dart';
+import 'package:hc_presensi/app/module/use_case/schedule_banned.dart';
 import 'package:hc_presensi/app/module/use_case/schedule_get.dart';
 import 'package:hc_presensi/core/helper/date_time_helper.dart';
 import 'package:hc_presensi/core/helper/location_helper.dart';
@@ -14,7 +15,9 @@ import 'package:geolocator/geolocator.dart';
 class MapNotifier extends AppProvider {
   final ScheduleGetUseCase _scheduleGetUseCase;
   final AttendanceSendUseCase _attendanceSendUseCase;
-  MapNotifier(this._scheduleGetUseCase, this._attendanceSendUseCase) {
+  final ScheduleBannedUseCase _scheduleBannedUseCase;
+  MapNotifier(this._scheduleGetUseCase, this._attendanceSendUseCase,
+      this._scheduleBannedUseCase) {
     init();
   }
 
@@ -23,20 +26,18 @@ class MapNotifier extends AppProvider {
   MapController _mapController = MapController.withPosition(
       initPosition:
           GeoPoint(latitude: -6.17549964024, longitude: 106.827149391));
-  late ScheduleEntity _schedule;
+  ScheduleEntity? _schedule;
   late CircleOSM _circle;
   bool _isGrantedLocation = false;
   bool _isEnabledLocation = false;
-  bool _isMockedLocation = false;
   late StreamSubscription<Position> _streamCurrentLocation;
   GeoPoint? _currentLocation;
 
   bool get isSuccess => _isSuccess;
   bool get isEnableSubmitButton => _isEnableSubmitButton;
-  bool get isMockedLocation => _isMockedLocation;
   MapController get mapController => _mapController;
 
-  ScheduleEntity get schedule => _schedule;
+  ScheduleEntity? get schedule => _schedule;
 
   bool get isGrantedLocaiton => _isGrantedLocation;
   bool get isEnabledLocation => _isEnabledLocation;
@@ -70,9 +71,9 @@ class MapNotifier extends AppProvider {
       _circle = CircleOSM(
           key: 'Center-Point',
           centerPoint: GeoPoint(
-              latitude: _schedule.office.latitude,
-              longitude: _schedule.office.longitude),
-          radius: _schedule.office.radius,
+              latitude: _schedule!.office.latitude,
+              longitude: _schedule!.office.longitude),
+          radius: _schedule!.office.radius,
           color: Colors.red.withOpacity(0.5),
           strokeWidth: 2,
           borderColor: Colors.red);
@@ -84,7 +85,7 @@ class MapNotifier extends AppProvider {
 
   _checkShift() {
     final now = DateTime.now();
-    final startTimeShift = _schedule.shift.startTime.split(':');
+    final startTimeShift = _schedule!.shift.startTime.split(':');
     final dateTimeShift = DateTime(
         now.year,
         now.month,
@@ -128,10 +129,8 @@ class MapNotifier extends AppProvider {
     _streamCurrentLocation = Geolocator.getPositionStream().listen(
       (position) {
         if (position.isMocked) {
-          _isMockedLocation = true;
-          errorMeesage = 'Perangkat anda terdeteksi menggunakan lokasi palsu';
           _closeStreamCurrentLocation();
-          notifyListeners();
+          _sendBanned();
         } else {
           if (!isDispose && !isLoading) {
             if (_currentLocation != null)
@@ -161,7 +160,7 @@ class MapNotifier extends AppProvider {
   }
 
   _validationSubmitButton() {
-    if (_schedule.isWfa) {
+    if (_schedule!.isWfa) {
       if (!_isEnableSubmitButton) {
         _isEnableSubmitButton = true;
         notifyListeners();
@@ -186,6 +185,17 @@ class MapNotifier extends AppProvider {
       _isSuccess = true;
     } else {
       snackbarMessage = response.message;
+    }
+    hideLoading();
+  }
+
+  _sendBanned() async {
+    showLoading();
+    final response = await _scheduleBannedUseCase();
+    if (response.success) {
+      _getSchedule();
+    } else {
+      errorMeesage = response.message;
     }
     hideLoading();
   }

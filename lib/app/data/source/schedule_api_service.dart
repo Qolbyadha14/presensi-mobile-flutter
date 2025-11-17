@@ -13,4 +13,7 @@ abstract class ScheduleApiService {
 
   @GET('/api/get-schedule')
   Future<HttpResponse<DataState>> get();
+
+  @POST('/api/banned')
+  Future<HttpResponse<DataState>> banned();
 }
