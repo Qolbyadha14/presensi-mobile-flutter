@@ -27,6 +27,7 @@ class HomeNotifier extends AppProvider {
   AttendanceEntity? _attendanceToday;
   List<AttendanceEntity> _listAttendanceThisMonth = [];
   ScheduleEntity? _schedule;
+  bool _isLeaves = false;
 
   String get name => _name;
   bool get isPhysicDevice => _isPhysicDevice;
@@ -34,6 +35,7 @@ class HomeNotifier extends AppProvider {
   List<AttendanceEntity> get listAttendanceThisMonth =>
       _listAttendanceThisMonth;
   ScheduleEntity? get schedule => _schedule;
+  bool get isLeaves => _isLeaves;
 
   @override
   void init() async {
@@ -89,9 +91,15 @@ class HomeNotifier extends AppProvider {
 
   _getSchedule() async {
     showLoading();
+    _isLeaves = false;
     final response = await _scheduleGetUseCase();
     if (response.success) {
-      _schedule = response.data!;
+      if (response.data != null) {
+        _schedule = response.data!;
+      } else {
+        _isLeaves = true;
+        snackbarMessage = response.message;
+      }
     } else {
       errorMeesage = response.message;
     }

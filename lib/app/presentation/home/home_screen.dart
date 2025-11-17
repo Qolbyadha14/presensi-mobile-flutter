@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:hc_presensi/app/module/entity/attendance.dart';
 import 'package:hc_presensi/app/presentation/detail_attendance/detail_attendance_screen.dart';
+import 'package:hc_presensi/app/presentation/face_recognition/face_recognition_screen.dart';
 import 'package:hc_presensi/app/presentation/home/home_notifier.dart';
 import 'package:hc_presensi/app/presentation/login/login_screen.dart';
 import 'package:hc_presensi/app/presentation/map/map_screen.dart';
@@ -60,30 +61,32 @@ class HomeScreen extends AppWidget<HomeNotifier, void, void> {
                 SizedBox(
                   height: 5,
                 ),
-                Row(
-                  children: [
-                    Expanded(
-                        child: Row(
-                      children: [
-                        Icon(Icons.location_city),
-                        SizedBox(
-                          width: 5,
-                        ),
-                        Text(notifier.schedule?.office.name ?? ''),
-                      ],
-                    )),
-                    Expanded(
-                        child: Row(
-                      children: [
-                        Icon(Icons.access_time),
-                        SizedBox(
-                          width: 5,
-                        ),
-                        Text(notifier.schedule?.shift.name ?? '')
-                      ],
-                    ))
-                  ],
-                )
+                (notifier.isLeaves)
+                    ? SizedBox()
+                    : Row(
+                        children: [
+                          Expanded(
+                              child: Row(
+                            children: [
+                              Icon(Icons.location_city),
+                              SizedBox(
+                                width: 5,
+                              ),
+                              Text(notifier.schedule?.office.name ?? ''),
+                            ],
+                          )),
+                          Expanded(
+                              child: Row(
+                            children: [
+                              Icon(Icons.access_time),
+                              SizedBox(
+                                width: 5,
+                              ),
+                              Text(notifier.schedule?.shift.name ?? '')
+                            ],
+                          ))
+                        ],
+                      )
               ],
             ),
           ),
@@ -126,13 +129,16 @@ class HomeScreen extends AppWidget<HomeNotifier, void, void> {
                 ),
               ),
               Expanded(child: SizedBox()),
-              Container(
-                  padding: EdgeInsets.all(5),
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      color: GlobalHelper.getColorSchema(context).onPrimary),
-                  child:
-                      Text((notifier.schedule?.isWfa ?? false) ? 'WFA' : 'WFO'))
+              (notifier.isLeaves)
+                  ? SizedBox()
+                  : Container(
+                      padding: EdgeInsets.all(5),
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                          color:
+                              GlobalHelper.getColorSchema(context).onPrimary),
+                      child: Text(
+                          (notifier.schedule?.isWfa ?? false) ? 'WFA' : 'WFO'))
             ],
           ),
           SizedBox(
@@ -149,18 +155,27 @@ class HomeScreen extends AppWidget<HomeNotifier, void, void> {
           SizedBox(
             height: 20,
           ),
-          Container(
-            width: double.maxFinite,
-            child: FilledButton(
-              onPressed: () => _onPressCreateAttendance(context),
-              child: Text('Buat Kehadiran'),
-              style: FilledButton.styleFrom(
-                  backgroundColor:
-                      GlobalHelper.getColorSchema(context).onPrimary,
-                  foregroundColor:
-                      GlobalHelper.getColorSchema(context).primary),
-            ),
-          )
+          (notifier.isLeaves)
+              ? Text(
+                  'Anda hari ini sedang cuti',
+                  style: GlobalHelper.getTextStyle(context,
+                          appTextStyle: AppTextStyle.TITLE_LARGE)
+                      ?.copyWith(
+                          color: GlobalHelper.getColorSchema(context).onPrimary,
+                          fontWeight: FontWeight.bold),
+                )
+              : Container(
+                  width: double.maxFinite,
+                  child: FilledButton(
+                    onPressed: () => _onPressCreateAttendance(context),
+                    child: Text('Buat Kehadiran'),
+                    style: FilledButton.styleFrom(
+                        backgroundColor:
+                            GlobalHelper.getColorSchema(context).onPrimary,
+                        foregroundColor:
+                            GlobalHelper.getColorSchema(context).primary),
+                  ),
+                )
         ],
       ),
     );
@@ -326,7 +341,7 @@ class HomeScreen extends AppWidget<HomeNotifier, void, void> {
     await Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => MapScreen(),
+          builder: (context) => FaceRecognitionScreen(),
         ));
     notifier.init();
   }
